@@ -1,0 +1,32 @@
+# Secrets / local configuration
+secrets.yaml
+*.secret
+*.pem
+*.key
+.env
+.env.*
+
+# Home Assistant local/runtime files
+.storage/
+home-assistant_v2.db
+home-assistant_v2.db-*
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# Python / tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary/export staging
+TMP/
+EXPORT_STAGING/
