@@ -1,7 +1,7 @@
 # Device Register
 
 Stand: 2026-09-02
-Inventur-Evidenz: letzter vorliegender `configuration.yaml`-Snapshot vom 2026-08-31 + letzter vorliegender SolarFlow-2400-AC-Automationssnapshot vom 2026-08-27 + bestätigte Nutzerangaben.
+Inventur-Evidenz: letzter vorliegender `configuration.yaml`-Snapshot vom 2026-08-31 + letzter vorliegender SolarFlow-2400-AC-Automationssnapshot vom 2026-08-27 + bestätigte Nutzerangaben und ältere belegte HA-Projektstände.
 
 Physische Geräte und ihre Projektrolle. Entity-IDs gehören nach `ENTITY_REGISTER.md`; Integrationen/Protokolle nach `INTEGRATION_REGISTER.md`.
 
@@ -11,6 +11,7 @@ Physische Geräte und ihre Projektrolle. Entity-IDs gehören nach `ENTITY_REGIST
 - `CONFIGURED SNAPSHOT` – im letzten vorliegenden HA-Konfigurationssnapshot referenziert; beweist nicht automatisch, dass die Hardware heute online/aktiv ist.
 - `ACTIVE / REPORTED + CONFIGURED` – sowohl als aktiv berichtet als auch im letzten Konfigurationssnapshot nachweisbar.
 - `KNOWN / LIVE VERIFY` – Gerät gehört zum Projektbestand, aktueller Betriebs-/HA-Status ist aber nicht frisch belegt.
+- `HISTORICAL / LIVE VERIFY` – früher konkret eingebunden/verwendet; heutige physische/HA-Rolle nicht bestätigt.
 - `LEGACY/SECONDARY PATH / LIVE VERIFY` – Konfiguration existiert noch, aktive physische Rolle ist unklar.
 
 ## 1. Netz-/Unterverteilungsmessung
@@ -47,6 +48,7 @@ Physische Geräte und ihre Projektrolle. Entity-IDs gehören nach `ENTITY_REGIST
 | DEV-BAT-006 | Marstek Venus E Mini | ca. 2 kWh Produktklasse; betriebliche Konfiguration hier nicht kanonisch | Test-/Integrationsgerät | KNOWN / LIVE VERIFY | Review-Messreihen/Claims verbleiben im Heise-Testberichte-Repo. |
 | DEV-BAT-007 | Marstek Jupiter C Plus | 5,12 kWh; im aktuellen Gesamt-SOC-Template 12–100 % Nutzbereich | PV-/Hausspeicher, Bestandteil des 4-Speicher-Gesamt-SOC | CONFIGURED SNAPSHOT / CURRENT ROLE STRONGLY INDICATED | HAME-Pfad `jpls_8h_24215ee563ae`; vier PV-Leistungseingänge + `combined_power` + SOC. Aktive Einbindung wird durch Gesamt-SOC-Konfiguration gestützt, heutiger Live-State aber nicht direkt gelesen. |
 | DEV-BAT-008 | Marstek B2500-D / HAME `HMJ-2` | `UNKNOWN` | Speicher-/PV-Pfad | LEGACY/SECONDARY PATH / LIVE VERIFY | Template `Marstek HMJ-2 System Power` ist im letzten Config-Snapshot vorhanden; nutzt HAME-Pfad `hmj_2_b42f03988c36`. Nicht Bestandteil des aktuellen 4-Speicher-Gesamt-SOC; daher nicht automatisch als aktuell aktiver Hausspeicher behandeln. |
+| DEV-BAT-009 | Hoymiles HiBattery 1920 AC / MS-A2 | 1,92-kWh-Klasse laut Gerätebezeichnung; heutiger Zustand nicht übernommen | früherer AC-Speicher-/MQTT-Steuerpfad | HISTORICAL / LIVE VERIFY | 2026-04 konkret per HA/MQTT gesteuert; damalige Entities in `ENTITY_REGISTER.md`. Im Snapshot 2026-08-31 nicht als aktueller 4-Speicherpfad identifiziert. |
 
 ### Aktuelles konfiguriertes 4-Speicher-Aggregat
 
@@ -63,11 +65,18 @@ Reserve außerhalb dieser Nutzbereiche: **2,1888 kWh**.
 
 Diese Werte sind `DOCUMENTED / HA CONFIG SNAPSHOT`, keine heutige Live-SOC-Aussage.
 
-## 4. Einzelmessung / Shelly-Steckdosen
+## 4. Gateways / Datenpfade
+
+| ID | Gerät / Dienst | Rolle | Status | Bemerkung |
+|---|---|---|---|---|
+| DEV-GW-001 | HAME Relay | lokaler/Relay-Pfad für Marstek-Telemetrie zu hm2mqtt | ACTIVE / REPORTED | Venus D über diesen Pfad angebunden; Jupiter/HMJ-Prefixe ebenfalls in HA-Konfiguration sichtbar. Firmware/Version `UNKNOWN`. |
+| DEV-GW-002 | OpenDTU | Hoymiles-PV-Telemetrie | HISTORICAL / LIVE VERIFY | 2026-06 konkrete HA-Quellen `sensor.opendtu_f86310_yield_total` und `sensor.opendtu_f86310_ac_power` berichtet. Im letzten ausgewerteten Config-Snapshot nicht als primärer aktueller PV-Messpfad identifiziert. |
+
+## 5. Einzelmessung / Shelly-Steckdosen
 
 | ID | Gerät / logische Rolle | Status | Rohpfad / Semantik |
 |---|---|---|---|
-| DEV-PLUG-001 | Shelly Plug S Gen 3 – Anzucht | ACTIVE / REPORTED + CONFIGURED | `shellyplugsg3_e4b063e51e78_power`; Energie aktuell über `..._energy_consumed`; heutige Rolle Verbrauch. Historisch vorher Mikrowechselrichter. |
+| DEV-PLUG-001 | Shelly Plug S Gen 3 – Anzucht | ACTIVE / REPORTED + CONFIGURED | `shellyplugsg3_e4b063e51e78_power`; Energie aktuell über `..._energy_consumed`; heutige Rolle Verbrauch. Historisch wurde derselbe Gerätepfad für andere Energie-/Erzeugungsanwendungen verwendet; aktuelle Richtung hat Vorrang. |
 | DEV-PLUG-002 | Shelly Outdoor – SBS4 Outdoor Steckdose | ACTIVE / REPORTED + CONFIGURED | `shellyoutdoorsg3_b08184ee7554_*`; Power, consumed/returned energy, Strom, Spannung, Frequenz. Exaktes Handelsmodell `VERIFY`. |
 | DEV-PLUG-003 | Shelly Plug S Gen 3 – HMS-800W-2T-Messung | CONFIGURED SNAPSHOT | `shellyplugsg3_8cbfea910720_power`; negative Rohleistung = Erzeugung im Template; Energie aus `energy_returned`. |
 | DEV-PLUG-004 | Shelly Plug S Gen 3 – SBS4 Klimaanlage | CONFIGURED SNAPSHOT | `shellyplugsg3_b08184a64470_power`; Verbrauchsenergie aktuell aus `energy_consumed`. |
@@ -76,17 +85,19 @@ Diese Werte sind `DOCUMENTED / HA CONFIG SNAPSHOT`, keine heutige Live-SOC-Aussa
 | DEV-PLUG-007 | Shelly Plug S Gen 3 – „Bluetti Balco PV“ | CONFIGURED SNAPSHOT / LIVE VERIFY | `shellyplugsg3_8cbfeaa040a4_power`; negative Rohleistung wird als positive PV-Leistung abgebildet; Erzeugungsenergie über `returned_energy`. Physische Zuordnung zum aktuellen Bluetti-System `VERIFY`. |
 | DEV-PLUG-008 | Shelly Plug PM Gen 3 – SBS4 Schuko Lader | CONFIGURED SNAPSHOT / LIVE VERIFY | `shellyplugpmg3_9070695a1600_power`; Verbrauchsenergie `energy_consumed`; Template schneidet negative Leistung auf 0 ab. Welches Fahrzeug/Gerät geladen wird: `UNKNOWN`. |
 | DEV-PLUG-009 | Shelly Plug S Gen 3 – Kühlschrank Cool Stash | CONFIGURED SNAPSHOT | Schaltaktor `switch.shellyplugsg3_8cbfea9b1c28`; wird durch Generic Thermostat geregelt. |
+| DEV-PLUG-010 | Shelly Plug S Gen 3 – früherer HiBattery-Messpfad | HISTORICAL / LIVE VERIFY | Gerätekennung `8cbfea91086c` wurde 2026-06 als Lade-/Entlade-Messpfad für Hoymiles HiBattery genannt; heutige Entity/Rolle nicht als aktuell übernehmen. |
 
-## 5. Klima / Thermostat / Sensorik
+## 6. Klima / Thermostat / Sensorik
 
 | ID | Gerät / Funktion | Status | Bemerkung |
 |---|---|---|---|
 | DEV-CLIMATE-001 | SwitchBot Thermo-Hygrometer | ACTIVE / REPORTED | genaue Anzahl, Modelle und Entity-IDs noch nicht aus Live HA exportiert. |
 | DEV-CLIMATE-002 | Govee Klima-Sensor(en) | ACTIVE / REPORTED | genaue Modelle und Entity-IDs noch nicht aus Live HA exportiert. |
 | DEV-CLIMATE-003 | Temperaturquelle `cool_stash_temperature` | CONFIGURED SNAPSHOT | Ziel-/Quellsensor des Generic Thermostat „Kühlschrank Cool Stash“; physisches Sensormodell `UNKNOWN`. |
+| DEV-CLIMATE-004 | `Thermometer Grow` | HISTORICAL/RECENT STATE EVIDENCE / LIVE VERIFY | konkrete Entity `sensor.wifi_thermometer`, device_class temperature, °C; in einem früheren HA-State-Snapshot `unavailable`. Physisches Modell/Integration `UNKNOWN`. |
 | DEV-HVAC-001 | Generic Thermostat „Kühlschrank Cool Stash“ | CONFIGURED SNAPSHOT | Kühllogik: Ziel 17 °C, Bereich 10–25 °C, `ac_mode: true`, ±2 °C Toleranzen, min. Zyklus 5 min, Keep-alive 2 min; schaltet DEV-PLUG-009. |
 
-## 6. Nicht aus Konfiguration ableiten
+## 7. Nicht aus Konfiguration ableiten
 
 Folgendes wird ausdrücklich **nicht** aus einem vorhandenen Entity-/Templatepfad automatisch behauptet:
 
