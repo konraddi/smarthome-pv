@@ -1,12 +1,13 @@
 # Integration Register
 
 Stand: 2026-09-02
-Evidenzbasis: HA-Konfigurationssnapshot 2026-08-31, SolarFlow-2400-AC-Automationssnapshot 2026-08-27, bestätigte Nutzerangaben.
+Evidenzbasis: HA-Konfigurationssnapshot 2026-08-31, SolarFlow-2400-AC-Automationssnapshot 2026-08-27, bestätigte Nutzerangaben und ältere belegte HA-Stände.
 
 ## Statuslogik
 
 - `CONFIGURED SNAPSHOT` – Integration/Pfad ist aus vorliegender Konfiguration belegbar.
 - `ACTIVE / REPORTED` – Nutzer bestätigt praktische Nutzung.
+- `HISTORICAL / LIVE VERIFY` – früher konkret verwendet, heutige Rolle nicht bestätigt.
 - `VERSION UNKNOWN` – keine aktuelle Versionsnummer belegt.
 - `WRITE VERIFY` – Lesepfad belegt, Schreibfähigkeit oder deren Zuverlässigkeit nicht vollständig verifiziert.
 
@@ -60,6 +61,7 @@ Bestätigte Gerätepunkte aus Entity-Pfaden:
 - Bluetti-Balco-PV-Messpfad `8cbfeaa040a4`.
 - Schuko-Lader `9070695a1600`.
 - Kühlschrank-Cool-Stash-Schaltplug `8cbfea9b1c28`.
+- historischer HiBattery-Messpfad mit Kennung `8cbfea91086c`.
 
 Keine IP-Adressen oder Zugangsdaten werden im öffentlichen Repo gespeichert.
 
@@ -87,6 +89,14 @@ Read-Pfade im Config-Snapshot:
 - `ab2000_06731_soc_level`
 - `eoc1nln9n465067_packinputpower`
 - `eoc1nln9n465067_outputpackpower`
+
+Historisch konkret genannt:
+
+- `sensor.eoc1nln9n465067_electriclevel`.
+- `number.eoc1nln9n465067_outputlimit`.
+- `input_boolean.solarflow_day_100_enabled`.
+
+Diese älteren IDs werden nicht automatisch als heutige Steuerpfade übernommen.
 
 Ein exakter aktueller 800-Plus-Write-Entity-Satz ist in der vorhandenen File-Library nicht vollständig wiedergefunden und bleibt `LIVE IMPORT REQUIRED`.
 
@@ -126,17 +136,45 @@ Venus-D-SOC kann lange `unavailable` sein. Ein HAME-/MQTT-Restore oder letzter b
 
 Keine Registeradresse, Baudrate, Funktion oder Steuerfähigkeit wird ohne belastbare Quelle erfunden. Nur weiterverfolgen, falls hm2mqtt für gewünschte Stellgrößen/Latenz nicht genügt.
 
-## 7. Klima-Integrationen
+## 7. Historische Hoymiles-/MQTT-Pfade
+
+### INT-HIBATTERY-MQTT – Hoymiles HiBattery 1920 AC / MS-A2
+
+Status: `HISTORICAL / LIVE VERIFY`.
+
+Früher konkret verwendet:
+
+- `select.msa_280425300101_mqtt_select` – EMS-/MQTT-Moduspfad, damalige Nutzung `ems_mode`/`mqtt_ctrl`.
+- `number.msa_280425300101` – damaliger Power-Control-Pfad; 200-W-Zeitplan wurde im Projekt genutzt.
+
+Read-/Write-Steuerung war damit historisch praktisch belegt. Der Pfad ist **nicht** Teil des letzten 4-Speicher-SOC-Snapshots und wird heute nicht ohne Live-Prüfung als aktiv behandelt.
+
+### INT-OPENDTU – OpenDTU PV
+
+Status: `HISTORICAL / LIVE VERIFY`.
+
+Früher konkret belegt:
+
+- `sensor.opendtu_f86310_yield_total` – Erzeugungsenergie.
+- `sensor.opendtu_f86310_ac_power` – AC-PV-Leistung.
+- damalige Templates `sensor.pv_opendtu_energie` und `sensor.pv_opendtu_leistung`.
+
+Aktueller OpenDTU-Betriebsstatus: `UNKNOWN`.
+
+## 8. Klima-Integrationen
 
 | ID | Geräte | Read | Write | Status |
 |---|---|---|---|---|
 | INT-SWITCHBOT | SwitchBot Thermo-Hygrometer | YES / REPORTED | n/a für reine Sensorik | ACTIVE / REPORTED / ENTITY INVENTORY OPEN |
 | INT-GOVEE | Govee Temperatur-/Feuchtesensoren | YES / REPORTED | n/a für reine Sensorik | ACTIVE / REPORTED / ENTITY INVENTORY OPEN |
 | INT-ACINFINITY | AC Infinity | UNKNOWN | UNKNOWN | OPEN / RESEARCH REQUIRED |
+| INT-WIFI-THERMOMETER | `Thermometer Grow` | READ PATH KNOWN | n/a | HISTORICAL/RECENT STATE EVIDENCE / LIVE VERIFY |
+
+Für `Thermometer Grow` ist `sensor.wifi_thermometer` konkret bekannt; in einem früheren State-Snapshot war der Sensor `unavailable`. Physische Integration/Modell bleibt `UNKNOWN`.
 
 Konkrete SwitchBot-/Govee-Entity-IDs und Updateintervalle sind noch nicht aus einem aktuellen HA-Export belegt.
 
-## 8. HTTP / TLS
+## 9. HTTP / TLS
 
 Im HA-Konfigurationssnapshot ist TLS direkt im `http:`-Block konfiguriert:
 
@@ -149,7 +187,7 @@ Der **Pfad** ist kein Secret; der Schlüsselinhalt wird selbstverständlich nich
 
 Reverse-Proxy-Nutzung: `UNKNOWN / nicht aus aktivem Config-Block belegt`.
 
-## 9. Integrationsqualität – offene technische Punkte
+## 10. Integrationsqualität – offene technische Punkte
 
 Noch nicht frisch verifiziert:
 
@@ -159,10 +197,11 @@ Noch nicht frisch verifiziert:
 - Zendure-Integrationsversion und aktuelle Betriebsart Cloud vs. lokales MQTT je Gerät.
 - hm2mqtt-/HAME-Relay-Version.
 - tatsächliche Write-Fähigkeiten des Venus D über HAME/hm2mqtt.
+- aktueller HiBattery-/OpenDTU-Status.
 - Reconnect-/Offline-Verhalten aller kritischen Integrationen.
 - Restore-Verhalten der kritischen Quellsensoren.
 
-## 10. Control-Ownership-Matrix
+## 11. Control-Ownership-Matrix
 
 | Stellgröße / Gerät | aktuell bekannte Steuerquelle | weitere mögliche Regler | Status |
 |---|---|---|---|
@@ -170,5 +209,6 @@ Noch nicht frisch verifiziert:
 | SF800 Plus Lade-/Entladelimits | Home Assistant Automation berichtet | Zendure HEMS/App | FUNCTION REPORTED; EXACT WRITE ENTITIES OPEN |
 | Venus D Ladeverhalten | Hersteller-/Geräteautomatik + in HA als Prioritätsinput beobachtet | HAME/hm2mqtt Write, Modbus möglich | CONTROL OWNER / WRITE PATH VERIFY |
 | Cool-Stash-Steckdose | HA Generic Thermostat | manueller Switch | CONFIGURED SNAPSHOT |
+| HiBattery/MS-A2 | historisch HA/MQTT | Geräte-/Herstellerlogik | HISTORICAL / LIVE VERIFY |
 
 Grundsatz: **ONE CONTROLLER PER ACTUATOR UNLESS COORDINATION IS VERIFIED.**
