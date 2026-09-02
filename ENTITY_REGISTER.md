@@ -1,7 +1,7 @@
 # Entity Register
 
 Stand: 2026-09-02
-Inventur-Evidenz: letzter vorliegender `configuration.yaml`-Snapshot vom 2026-08-31; SolarFlow-2400-AC-Automationssnapshot vom 2026-08-27; bestätigte Nutzerangaben.
+Inventur-Evidenz: letzter vorliegender `configuration.yaml`-Snapshot vom 2026-08-31; SolarFlow-2400-AC-Automationssnapshot vom 2026-08-27; bestätigte Nutzerangaben und ältere belegte HA-Stände.
 
 Diese Datei ist die kanonische Zuordnung wichtiger Home-Assistant-Entities, Messpunkte, Einheiten und Semantik.
 
@@ -10,6 +10,7 @@ Diese Datei ist die kanonische Zuordnung wichtiger Home-Assistant-Entities, Mess
 - `CONFIGURED 2026-08-31` – Entity/Pfad ist im letzten vorliegenden HA-Konfigurationssnapshot referenziert.
 - `AUTOMATION 2026-08-27` – Entity/Pfad ist in der letzten vollständig vorliegenden Automation referenziert.
 - `REPORTED ACTIVE` – vom Nutzer als aktuell im Betrieb berichtet.
+- `HISTORICAL USER FACT` – früher konkret vom Nutzer genannt/verwendet; nicht automatisch heute aktiv.
 - `LIVE VERIFY` – heutiger Entity-State/Availability nicht direkt gelesen.
 - `CONTROL-CRITICAL` – darf für Regelentscheidungen nur mit expliziter Availability/Freshness verwendet werden.
 - `DISPLAY/ANALYTICS` – darf historische Fallbackwerte verwenden, solange dies sichtbar gekennzeichnet ist; nicht automatisch als Live-Steuerwert verwenden.
@@ -108,6 +109,12 @@ Die tatsächlichen automatisch generierten Entity-IDs dieser drei Templates werd
 | `sensor.solarflow_800_plus_electric_level` | Haupt-SOC im Gesamt-Speicher-Aggregat | % | CONFIGURED 2026-08-31 |
 | `sensor.ab2000_06731_soc_level` | Backup-SOC des Aggregats | % | CONFIGURED 2026-08-31 / DISPLAY FALLBACK |
 
+Historisch konkret vom Nutzer genannt:
+
+- `sensor.eoc1nln9n465067_electriclevel` – SOC-Pfad, `HISTORICAL USER FACT 2026-05-18 / LIVE VERIFY`.
+
+Die Existenz des älteren direkten `eoc...electriclevel`-Pfads und des neueren Alias-/Templatepfads `sensor.solarflow_800_plus_electric_level` darf nicht ohne Live-Abgleich als Identität/Weiterleitung interpretiert werden.
+
 ## 3.2 Systemleistung
 
 Rohpfade:
@@ -127,11 +134,16 @@ Template:
 
 Status: `CONFIGURED 2026-08-31`.
 
-## 3.3 Aktoren
+## 3.3 Historisch bestätigte Aktoren / Helper
 
-Exakte aktuelle 800-Plus-Aktor-Entity-IDs konnten in der vorhandenen File-Library **nicht vollständig wiedergefunden** werden. Sie bleiben `UNKNOWN / LIVE IMPORT REQUIRED`.
+Früher konkret vom Nutzer genannt:
 
-Bekannte Funktionslogik gehört nach `AUTOMATION_REGISTER.md`; Entity-IDs werden nicht aus dem 2400-AC-Präfix abgeleitet.
+- `number.eoc1nln9n465067_outputlimit` – Output-Limit, `HISTORICAL USER FACT 2026-05-18 / LIVE VERIFY`.
+- `input_boolean.solarflow_day_100_enabled` – damaliger Helper für eine Tageslogik, `HISTORICAL USER FACT / LIVE VERIFY`.
+
+Diese historischen IDs beweisen **nicht**, dass die heutige 800-Plus-Automation exakt dieselben Aktoren/Helper verwendet.
+
+Exakte aktuelle 800-Plus-Aktor-Entity-IDs konnten in der vorhandenen File-Library nicht vollständig wiedergefunden werden und bleiben `LIVE IMPORT REQUIRED`.
 
 ---
 
@@ -283,7 +295,7 @@ Templates:
 | SBS4 Anzucht Energie | `sbs4_anzucht_energie_kwh` | kWh | aktuelle Verbrauchsenergie, `total_increasing` |
 
 Aktuelle Semantik: **Verbrauch / consumed**.  
-Historische frühere Nutzung desselben Steckers an einem Mikrowechselrichter ändert die aktuelle Rolle nicht.
+Historische frühere Nutzung desselben Steckers an einem Mikrowechselrichter bzw. anderen Energiepfad ändert die aktuelle Rolle nicht.
 
 ---
 
@@ -365,8 +377,6 @@ Config-Semantik je Phase:
 - negative Rohleistung = Einspeisung.
 
 ## 13.2 Phasen-Templates
-
-Je Phase existieren drei logische Größen:
 
 ### Phase A
 
@@ -514,18 +524,59 @@ Automatisch generierte Entity-IDs werden nicht geraten.
 
 ---
 
-# 17. Klima-Entities noch offen
+# 17. Klima-Entities
 
 Vom Nutzer als vorhanden berichtet:
 
 - SwitchBot Thermo-Hygrometer.
 - Govee Temperatur-/Feuchtesensoren.
 
-Konkrete Entity-IDs, Gerätezuordnungen, Updateintervalle und aktuelle Availability wurden in den bisher ausgewerteten Snapshots nicht vollständig gefunden. Sie bleiben `LIVE HA EXPORT REQUIRED`.
+Konkrete SwitchBot-/Govee-Entity-IDs, Gerätezuordnungen, Updateintervalle und aktuelle Availability wurden in den bisher ausgewerteten Snapshots nicht vollständig gefunden. Sie bleiben `LIVE HA EXPORT REQUIRED`.
+
+Zusätzlich aus einem früheren HA-State-Snapshot konkret bekannt:
+
+| Entity-ID | Friendly Name / Gerät | Größe | Einheit | beobachteter Zustand | Status |
+|---|---|---|---:|---|---|
+| `sensor.wifi_thermometer` | `Thermometer Grow` / friendly `Thermometer Grow sensorTemperature` | Temperatur | °C | `unavailable` im damaligen Snapshot | HISTORICAL/RECENT STATE EVIDENCE / LIVE VERIFY |
+
+Physisches Modell und Integration dieses Thermometers bleiben `UNKNOWN`.
 
 ---
 
-# 18. Pflichtprüfung vor Nutzung als Regelinput
+# 18. Historische/ältere HA-Pfade – nicht als aktuellen Live-State verwenden
+
+Diese Entities sind aus älteren konkreten Nutzerangaben belegt, erscheinen aber nicht als maßgebliche aktuelle Pfade im Snapshot vom 31.08.
+
+## 18.1 Hoymiles HiBattery 1920 AC / MS-A2
+
+- `select.msa_280425300101_mqtt_select` – historischer MQTT-/EMS-Steuerpfad; damalige Nutzung umfasste `ems_mode`/`mqtt_ctrl`.
+- `number.msa_280425300101` – historischer Leistungssteuerpfad; in damaliger Nutzung wurde u. a. 200 W Zeitplan/Power-Control genannt.
+- Shelly-Gerätekennung `8cbfea91086c` – 2026-06 als HiBattery-Lade-/Entlade-Messpfad genannt; vollständige heutige Entity-ID nicht aus dem alten Fakt ableiten.
+
+Status: `HISTORICAL USER FACT / LIVE VERIFY`.
+
+## 18.2 OpenDTU PV
+
+- `sensor.opendtu_f86310_yield_total` – historischer PV-Energiepfad.
+- `sensor.opendtu_f86310_ac_power` – historischer PV-Leistungspfad.
+- `sensor.pv_opendtu_energie` – damalige Template-Entity.
+- `sensor.pv_opendtu_leistung` – damalige Template-Entity.
+
+Status: `HISTORICAL USER FACT 2026-06 / LIVE VERIFY`.
+
+## 18.3 SolarFlow 800 Plus ältere direkte IDs
+
+- `sensor.eoc1nln9n465067_electriclevel` – historischer direkter SOC-Pfad.
+- `number.eoc1nln9n465067_outputlimit` – historischer Output-Limit-Pfad.
+- `input_boolean.solarflow_day_100_enabled` – historischer Helper.
+
+Status: `HISTORICAL USER FACT / LIVE VERIFY`.
+
+Historische IDs bleiben für Migration/Altlastensuche wichtig, dürfen aber nicht ohne Live-Prüfung in neue Automationen übernommen werden.
+
+---
+
+# 19. Pflichtprüfung vor Nutzung als Regelinput
 
 Für jede `CONTROL-CRITICAL` Entity vor neuer/angepasster Regelung klären:
 
