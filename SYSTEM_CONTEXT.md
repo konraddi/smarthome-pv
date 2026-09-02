@@ -2,112 +2,228 @@
 
 Stand: 2026-09-02
 
-Diese Datei enthält stabile bzw. langsam veränderliche Rahmenbedingungen. Live-Zustände gehören nach `CURRENT_SYSTEM_STATUS.md`.
+Diese Datei enthält stabile bzw. langsam veränderliche Rahmenbedingungen. Live-Zustände gehören nach `CURRENT_SYSTEM_STATUS.md`. Konfigurationssnapshots beweisen Konfiguration, nicht automatisch heutige Online-Zustände.
 
 ## 1. Standort und Netzmodell
 
 - Standort: Bayern, Deutschland.
 - Haus-/Anlagenbetrachtung erfolgt über einen **saldierenden Zähler**.
-- Für Regelungen auf Haus-/Netzebene ist daher die Gesamtbilanz entscheidend, nicht die isolierte Leistung einer einzelnen Phase.
+- Für Regelungen auf Haus-/Netzebene ist die Gesamtbilanz entscheidend, nicht die isolierte Leistung einer einzelnen Phase.
+- Kanonischer HA-Netto-Pfad ist als Summe der drei Phasen des zentralen Shelly Pro 3EM konfiguriert.
+- Konfigurationsvorzeichen: **positiv = Netzbezug, negativ = Netzeinspeisung**.
 
-## 2. Home Assistant
+## 2. Home Assistant – Architektur
 
-Home Assistant ist die zentrale Beobachtungs- und Automationsplattform des Projekts.
+Home Assistant ist die zentrale Beobachtungs- und Automationsplattform.
 
 Bekannte Aufgaben:
 
-- PV-/Netzleistungsbewertung
-- Speichersteuerung
-- Shelly-Energieerfassung
-- Zendure-Steuerung
-- Marstek-/HAME-/MQTT-Monitoring
-- Klima-/Temperatur-/Feuchteerfassung
-- Energy-Dashboard
+- PV-/Netzleistungsbewertung.
+- Speichersteuerung.
+- Shelly-Energieerfassung.
+- Zendure-Steuerung.
+- Marstek-/HAME-/MQTT-Monitoring.
+- Klima-/Temperatur-/Feuchteerfassung.
+- Energy-Dashboard.
+- Generic-Thermostat-Regelung.
+- 30-s-Leistungsfilter.
+- Integration von Leistung nach Energie für Unterzähler.
 
-Exakte HA-Version, Datenbanktyp, Recorder-Aufbewahrung und Backupstrategie sind derzeit in dieser Projektakte noch `UNKNOWN` und werden nicht aus Erinnerung ergänzt.
+Konfigurationsstruktur im letzten Snapshot:
 
-## 3. PV-Bestand
+- `default_config`.
+- Themes aus separatem Theme-Ordner.
+- `automation: !include automations.yaml`.
+- `script: !include scripts.yaml`.
+- `scene: !include scenes.yaml`.
+- umfangreiche Template-Sensorik.
+- `filter`-Sensor für 30-s-Nettoleistung.
+- `integration`-Sensoren für Garage-Hinten-kWh.
+- `generic_thermostat` für „Kühlschrank Cool Stash“.
+- `command_line`-Diagnosesensoren.
+
+Exakte Home-Assistant-Core-Version und Installationsart: `UNKNOWN / LIVE VERIFY`.
+
+## 3. Recorder / Historie
+
+Letzter vorliegender Config-Snapshot vom 2026-08-31:
+
+- Datenbank: SQLite.
+- Pfad: `/config/home-assistant_v2.db`.
+- Detail-Retention: 30 Tage.
+- `auto_purge: true`.
+- `commit_interval: 30` Sekunden.
+- eingeschlossene Domains: `sensor`, `switch`, `energy`, `binary_sensor`.
+- ausgeschlossene Domains: `updater`, `persistent_notification`, `script`.
+
+Zusätzlich ist ein Command-Line-Sensor zur Datenbankgröße konfiguriert.
+
+Dieser Stand ist `DOCUMENTED / CONFIG SNAPSHOT`, nicht heute live aus HA gelesen.
+
+Backup-/Restore-Konzept: `UNKNOWN`.
+
+## 4. PV-Bestand
 
 Bekannter Gesamtbestand:
 
-- 29 PV-Module
-- insgesamt ungefähr 8–8,5 kWp
+- 29 PV-Module.
+- insgesamt ungefähr 8–8,5 kWp.
 
 Bekannte Wechselrichter:
 
-- Hoymiles HM-1500-4T
-- Hoymiles HMS-800W-2T
-- Hoymiles HMS-2000-4T
-- SMA-Stringwechselrichter, ca. 4,5 kW
+- Hoymiles HM-1500-4T.
+- Hoymiles HMS-800W-2T.
+- Hoymiles HMS-2000-4T.
+- SMA-Stringwechselrichter, ca. 4,5 kW.
 
-Die exakte Modulzuordnung zu Wechselrichtern/Strings und die aktuellen Leistungsgrenzen werden erst nach verifizierter Inventur kanonisch ergänzt.
+Für den HMS-800W-2T existiert ein eigener Shelly-PV-Messpfad in HA. Exakte Modulzuordnung zu Wechselrichtern/Strings und Ausrichtungen: `UNKNOWN / INVENTORY GAP`.
 
-## 4. Batteriespeicher / Energiesysteme
+## 5. Netz- und Unterverteilungsmessung
 
-Bekannte Systeme im Projektkontext:
+### Zentraler Netzanschlusspunkt
 
-- Zendure SolarFlow 2400 AC mit AB3000X, 2,88 kWh
-- Zendure SolarFlow 800 Plus, integrierter Speicher 1,92 kWh
-- Marstek Venus D
-- Jackery 2000 Ultra
-- Bluetti Elite 300 + Transfer Hub
-- Marstek Venus E Mini als Test-/Integrationsgerät
+Shelly Pro 3EM, Rohpfade:
 
-Review-spezifische Messreihen und Claims zum Venus E Mini oder anderen Testgeräten gehören in `konraddi/Heise-Testberichte`; hier nur betriebsrelevante Integration.
+- Phase A/B/C Active Power.
+- daraus Template `sensor.shelly_3em_netto_leistung`.
+- zusätzliche Import-/Export-Anzeige.
+- zusätzlicher 30-s-Mittelwert.
 
-## 5. Messung
+Für Haus-/Speicherregelung ist der **saldierte Netto-Sensor** autoritativ.
 
-Bekannte Messgeräte/-pfade:
+### Garage Hinten
 
-- Shelly Pro 3EM als zentraler Netz-/Phasenmesspfad
-- Shelly Plug S Gen3 an einzelnen Verbrauchern/Erzeugern
-- weitere Smart-Plug-/Gerätemessungen je nach Setup
+Separater Shelly 3EM Gen3 mit drei Phasen und eigenen Templates für:
 
-Die kanonische Vorzeichenkonvention des zentralen Netto-Leistungssensors ist noch zu verifizieren und wird in `ENTITY_REGISTER.md` dokumentiert.
+- Netto je Phase.
+- positive Bezugsanteile je Phase.
+- negative Einspeiseanteile je Phase.
+- Netto gesamt.
+- Summe der Bezugsanteile.
+- Summe der Einspeiseanteile.
+- integrierte kWh je Phase und gesamt.
 
-## 6. Zendure-Regellogik
+Wichtig: Summe positiver Bezugsanteile und Summe negativer Einspeiseanteile sind bei gemischten Phasenrichtungen **nicht** die saldierte Haus-/Netzbilanz. Exakter physischer Stromkreis „Garage Hinten“ noch `VERIFY`.
 
-Bekannte Projektprinzipien:
+## 6. Aktuell konfiguriertes 4-Speicher-Modell
 
-- SolarFlow 2400 AC wird in Home Assistant aktiv in die Hausenergieoptimierung einbezogen.
-- SolarFlow 800 Plus wird ebenfalls aktiv geregelt.
-- Ziel kann bewusst eine kleine Rest-Netzeinspeisung von ungefähr 200 W sein, damit die Regelung nicht ständig zwischen Bezug und Einspeisung kippt.
-- HEMS/Herstellerregelung und Home Assistant dürfen nicht unkoordiniert dieselben Limits/Stellgrößen regeln.
+Der letzte HA-Config-Snapshot enthält einen kapazitätsgewichteten Gesamt-SOC für genau vier Speicher:
 
-Exakte aktuelle YAML und alle Stellgrößen müssen aus den realen Automationen importiert werden; nicht aus Erinnerung rekonstruieren.
+| Speicher | Nennkapazität | im Template verwendeter Nutzbereich |
+|---|---:|---|
+| Zendure SolarFlow 800 Plus | 1,92 kWh | 10–90 % |
+| Zendure SolarFlow 2400 AC | 2,88 kWh | 10–90 % |
+| Marstek Venus D | 5,12 kWh | 12–100 % |
+| Marstek Jupiter C Plus | 5,12 kWh | 12–100 % |
 
-## 7. Marstek Venus D
+Gesamt:
+
+- Nennkapazität: **15,04 kWh**.
+- im Template maximal nutzbare Energie: **12,8512 kWh**.
+- Reserve außerhalb der definierten Nutzbereiche: **2,1888 kWh**.
+
+Dieses Modell ist die aktuelle **Konfigurationsstruktur**, keine Aussage über heutigen SOC oder Online-Status.
+
+## 7. Weitere Speicher-/Energiesysteme
+
+Im Projektbestand bekannt:
+
+- Jackery 2000 Ultra.
+- Bluetti Elite 300 + Transfer Hub.
+- Marstek Venus E Mini.
+
+Zusätzlich im letzten HA-Config-Snapshot vorhanden:
+
+- Marstek B2500-D / HAME `HMJ-2` System-Power-Template.
+- Messpfad mit Template-Namen `Bluetti Balco PV`.
+
+Diese beiden konfigurierten Pfade werden **nicht** automatisch als aktive Mitglieder der aktuellen Speicherregelung behandelt, weil sie nicht im 4-Speicher-Gesamt-SOC enthalten sind und kein heutiger Live-State vorliegt.
+
+## 8. Zendure-Regelarchitektur
+
+### SolarFlow 2400 AC
+
+Aktiv vom Nutzer berichtet. Letzter vollständiger Automationssnapshot 2026-08-27.
+
+Grundprinzip:
+
+- Tag 08:00–20:00: `Input mode`, dynamische AC-Überschussladung.
+- Nacht 20:00–08:00: `Output mode` und 190 W Output im letzten Snapshot.
+- Tagesziel: ungefähr 200 W Rest-Netzeinspeisung.
+- Soft-Minimum 80 W.
+- max. Tages-Input in der Automation 1600 W.
+- Hochregelung max. +500 W je Regeldurchlauf.
+- Roh-Netzleistung für schnelle Reduktion.
+- Rohwert + 30-s-Mittel gemeinsam zur Hochregelung.
+- Venus D erhält unter 90 % SOC Lade-Headroom.
+- fehlen Venus-SOC oder Venus-Leistung: volle 2200-W-Headroom-Reserve als Failsafe.
+- Venus D entlädt stärker als 100 W: SolarFlow auf 80 W zurück.
+
+Diese Werte sind **Automationsparameter des Snapshots**, nicht automatisch Geräte-Nennwerte.
+
+### SolarFlow 800 Plus
+
+Aktive HA-Automation vom Nutzer berichtet; vollständige aktuelle YAML fehlt noch.
+
+Bekanntes Verhalten:
+
+- Zusatz-AC-Ladung 11:00–17:00.
+- ungefähr bis 800 W.
+- Nutzung 2400-AC-SOC/Marstek-Zustand.
+- ca. 200 W Rest-Einspeisungsziel.
+- tagsüber Output-Limit 0 für PV-Passthrough.
+- Nachtentladung ungefähr 120 W im letzten bekannten Funktionsstand.
+
+## 9. Marstek Venus D
 
 Bekannt:
 
-- Anbindung über **HAME Relay** und **hm2mqtt**.
-- Telemetrie-Update ungefähr einmal pro Minute.
-- Der SOC-Pfad war zeitweise über längere Zeit nicht verfügbar.
-- Der letzte bekannte SOC soll in diesem Fall **nicht** als aktuelle Steuerfreigabe für andere Speicher weiterverwendet werden.
+- Anbindung über HAME Relay + hm2mqtt.
+- Telemetrie ungefähr einmal pro Minute.
+- SOC-Pfad kann länger ausfallen.
+- SolarFlow 2400 AC darf bei fehlendem Venus-Live-SOC nicht mit einem alten Venus-SOC weiterplanen.
+- in der letzten 2400-AC-Automation wird bei ungültigem Venus-SOC/Power konservativ volle Venus-Headroom reserviert.
 
-Ob und in welchem Umfang dieser Pfad zuverlässig schreiben/steuern kann, ist separat von der Lesefunktion zu dokumentieren. Ein möglicher Modbus-RS485-Steuerpfad wurde diskutiert, ist aber noch nicht als kanonisch verifiziert dokumentiert.
+Write-/Control-Fähigkeit über HAME/hm2mqtt: `VERIFY`.  
+Modbus-RS485 als möglicher alternativer Steuerpfad: `DISCUSSED / NOT VERIFIED`.
 
-## 8. Klima-/Sensordaten
+## 10. SOC-Aggregation und Datenqualität
+
+`Verbleibende Energie bis Mindest-SoC` speichert letzte gültige SOC-Werte und verwendet sie weiter, wenn eine Live-Quelle vorübergehend fehlt. Dazu existieren Datenqualitätsattribute, u. a. `daten_vollstaendig_aktuell` und `quellen_mit_letztem_wert`.
+
+Projektregel:
+
+- Fallback ist für **Dashboard/Trend** zulässig.
+- Fallback ist **kein Live-Regelwert**.
+- Aktor-Automationen dürfen den bekannten Venus-D-Failsafe nicht über den Aggregatsensor umgehen.
+
+## 11. Klima / Thermostat
 
 Home Assistant sammelt Temperatur-/Feuchtedaten u. a. aus:
 
-- SwitchBot Thermo-Hygrometern
-- Govee-Sensoren
+- SwitchBot Thermo-Hygrometern.
+- Govee-Sensoren.
 
-Ziel ist eine projektverfügbare, möglichst tägliche Datenübernahme mit ungefähr 1-Minuten-Auflösung für Verlauf und Graphanalyse.
+Konkrete Klima-Entity-Inventur: `OPEN / LIVE EXPORT REQUIRED`.
 
-AC-Infinity-Integration bzw. direkter Export ist als offener Integrationspunkt geführt.
+Zusätzlich konfiguriert:
 
-## 9. Security-/Privacy-Rahmen
+- Generic Thermostat „Kühlschrank Cool Stash“.
+- Aktor: Shelly Plug S Gen 3.
+- Temperatursensor `cool_stash_temperature`.
+- Ziel 17 °C.
+
+## 12. Security-/Privacy-Rahmen
 
 Das Repository `konraddi/smarthome-pv` ist zum Initialisierungszeitpunkt öffentlich.
 
-Daher nicht hier persistieren:
+Daher nicht persistieren:
 
-- Home-Assistant-Passwörter/Tokens
-- MQTT-Credentials
-- externe DDNS-/HA-Zugangsdetails, soweit nicht zwingend nötig
-- private IP-Adressen
-- WLAN-Zugangsdaten
-- API-Keys
-- detaillierte Zeitreihen, die Anwesenheitsprofile offenlegen können, ohne bewusste Freigabe/Privacy-Entscheidung.
+- Home-Assistant-/MQTT-Passwörter/Tokens.
+- private IP-Adressen.
+- externe Zugangsdaten/URLs, wenn nicht zwingend nötig.
+- WLAN-Credentials/API-Keys.
+- Private Keys.
+- detaillierte Klima-/Anwesenheitszeitreihen ohne bewusste Privacy-Entscheidung.
+
+Technisch notwendige Entity-IDs werden dokumentiert; sie sind keine Zugangsdaten, werden aber nicht unnötig um Netzwerktopologie/Serieninformationen erweitert.
