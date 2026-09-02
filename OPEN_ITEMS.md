@@ -2,7 +2,7 @@
 
 Stand: 2026-09-02 – nach Deep Inventory
 
-Nur offene Punkte. Bereits durch den Config-/Automation-Snapshot geklärte Lücken wurden entfernt oder präzisiert.
+Nur offene Punkte. Bereits durch Config-, Automations- oder historische Projektsnapshots geklärte Lücken werden präzisiert statt erneut als völlig unbekannt geführt.
 
 ## OI-001 – Repository-Privacy entscheiden
 
@@ -73,6 +73,7 @@ Besonders prüfen:
 - Bluetti Balco PV.
 - Garage Hinten.
 - Cool Stash.
+- historische HiBattery-/OpenDTU-Pfade.
 
 ## OI-005 – 2400-AC-Live-YAML gegen Snapshot 27.08. diffen
 
@@ -95,22 +96,31 @@ Noch offen:
 
 Vor der nächsten Änderung immer Live-YAML lesen.
 
-## OI-006 – SolarFlow-800-Plus-Automation vollständig importieren
+## OI-006 – SolarFlow-800-Plus-Automation vollständig live importieren
 
 Priorität: **HOCH**
 
 Mehrfache File-Library-Suche hat keine vollständige aktuelle YAML geliefert.
 
-Bekannt ist die Funktionslogik, unbekannt bleiben insbesondere:
+Historisch konkret bekannte Device-Entities sind inzwischen dokumentiert, darunter:
 
-- exakte Aktor-Entity-IDs.
+- `sensor.eoc1nln9n465067_electriclevel`.
+- `number.eoc1nln9n465067_outputlimit`.
+- ältere Helper wie `input_boolean.solarflow_day_100_enabled`.
+
+Außerdem ist die Funktionslogik der aktuellen Projektautomation bekannt. Das ersetzt aber **nicht** die heutige YAML.
+
+Weiter offen:
+
+- welche historischen Device-Entities heute noch unverändert existieren.
+- vollständige aktuelle Aktor-/Sensorliste.
 - Triggerfrequenzen.
 - Deadbands/Rampen.
 - Übergangslogik.
 - `mode`.
 - Freshness-/Failsafe-Prüfungen.
 
-Direkter Export aus HA erforderlich.
+Direkter Export aus HA erforderlich; historische IDs nicht blind übernehmen.
 
 ## OI-007 – Venus-D-Freshness statt nur Availability
 
@@ -149,26 +159,38 @@ Nur weiterverfolgen, wenn direkter stabiler Steuerzugriff benötigt wird und hm2
 
 Keine Registeradressen/Datentypen raten.
 
-## OI-010 – PV-Modul-/WR-Zuordnung inventarisieren
+## OI-010 – Aktuelle physische PV-Topologie reconciliieren
 
-Priorität: MITTEL
+Priorität: **HOCH**
 
-Bekannt:
+Der Gesamtbestand wird aktuell mit 29 Modulen und ungefähr 8–8,5 kWp geführt. Zusätzlich liegen zwei konkrete, aber voneinander abweichende Topologie-Snapshots vor:
 
-- 29 Module.
-- ungefähr 8–8,5 kWp.
-- HM-1500-4T.
-- HMS-800W-2T.
-- HMS-2000-4T.
-- SMA ca. 4,5 kW.
+### Snapshot 2026-07-29
 
-Offen:
+- vordere Garage: 2× HM1500, je 2× JA Solar 440 Wp.
+- hintere Garage: 1× HMS2000, 4×440 Wp.
+- Balkon: 1× HMS800, 2×440 Wp, Westen.
 
-- Modulmodelle/Wp.
-- exakte Modulanzahl je WR/MPPT/String.
-- Ausrichtungen.
-- physische Standorte.
-- aktuelle WR-Limits.
+### „Winterkonfiguration“ 2026-07-30
+
+- vordere Garage: 2× HM1500, je 3 Module.
+- hintere Garage: 2× HM1500, je 4×430 W + 1× HMS2000 mit 4×500 W.
+- Balkon: 2×430 W, 90°/vertikal, Westen.
+- übrige Module: Süd, flache ballastierte Aufständerung.
+- für diesen Winterstand wurde „kein SMA“ angegeben.
+
+Das steht teilweise im Konflikt zum später geführten Bestand mit SMA-Stringwechselrichter ca. 4,5 kW.
+
+Zu klären ist daher **nicht mehr allgemein „welche Topologie gab es?“**, sondern konkret:
+
+- welcher Snapshot war Ist-Zustand und welcher Plan/Winterziel?
+- was davon wurde tatsächlich umgesetzt?
+- wie viele HM1500 sind heute physisch vorhanden?
+- welche Module/Wp hängen heute an jedem WR/MPPT/String?
+- ist der SMA heute aktiv, entfernt oder nur in einem anderen Anlagenzweig?
+- welche Ausrichtungen gelten heute?
+
+Erst danach einzelne physische Wechselrichter dauerhaft mit je eigener `DEV-*`-Identität auflösen.
 
 ## OI-011 – Klima-Datenpipeline umsetzen
 
@@ -280,6 +302,8 @@ SwitchBot und Govee sind als Sensorquellen bekannt, konkrete Daten fehlen:
 - Batterie/Availability.
 - Kalibrierung/Offsets.
 
+Zusätzlich ist `sensor.wifi_thermometer` / `Thermometer Grow` historisch konkret bekannt; heutiger Zustand und physisches Modell bleiben zu verifizieren.
+
 Erforderlich vor produktiver Klima-Datenpipeline.
 
 ## OI-019 – Historische/sekundäre Gerätepfade bereinigen oder kennzeichnen
@@ -290,6 +314,8 @@ Nach Live-Abgleich entscheiden, ob noch benötigte oder verwaiste Pfade vorliege
 
 - HMJ-2/B2500-D.
 - Bluetti Balco PV.
+- Hoymiles HiBattery/MS-A2.
+- OpenDTU.
 - CL Test Echo.
 - ggf. alte Entity-Namen aus früheren Shelly-Energiepfaden.
 
