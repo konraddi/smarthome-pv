@@ -9,7 +9,7 @@ Chronologie tatsächlich bekannter Projekt-Ereignisse. Konfigurationsfunde werde
 - Vollständige Detailinventur des bisher verfügbaren Smart-Home-/PV-Projektmaterials durchgeführt.
 - GitHub-Register auf Basis des letzten `configuration.yaml`-Snapshots vom 2026-08-31 und des letzten vollständigen SolarFlow-2400-AC-Automationssnapshots vom 2026-08-27 erweitert.
 - `DEVICE_REGISTER.md`, `ENTITY_REGISTER.md`, `INTEGRATION_REGISTER.md`, `AUTOMATION_REGISTER.md`, `SYSTEM_CONTEXT.md`, `CURRENT_SYSTEM_STATUS.md`, `ENERGY_FLOW_MODEL.md`, `DATA_PIPELINE.md` und `OPEN_ITEMS.md` reconciled/erweitert.
-- klare Evidenztrennung eingeführt: `CONFIGURED SNAPSHOT`, `REPORTED ACTIVE`, `LATEST UPLOADED YAML`, `LIVE VERIFY`.
+- klare Evidenztrennung eingeführt: `CONFIGURED SNAPSHOT`, `REPORTED ACTIVE`, `HISTORICAL`, `LATEST UPLOADED YAML`, `LIVE VERIFY`.
 - zentralen Netzsensor identifiziert: `sensor.shelly_3em_netto_leistung`, Summe dreier Shelly-Pro-3EM-Phasen.
 - Konfigurationsvorzeichen dokumentiert: positiv = Netzbezug, negativ = Netzeinspeisung.
 - 30-s-Mittelwert `sensor.shelly_3em_netto_leistung_30s_mittel` identifiziert.
@@ -17,18 +17,22 @@ Chronologie tatsächlich bekannter Projekt-Ereignisse. Konfigurationsfunde werde
 - kompletten 2400-AC-Regelalgorithmus vom Snapshot 27.08. inventarisiert: 15-s-Tagestick, 5-min-Nachttick, 200-W-Rest-Einspeisung, 80-W-Soft-Minimum, 1600-W-Input-Cap in der Automation, +500-W-Aufwärtsrampe, Venus-Headroom und -100-W-Entladeblock.
 - bestätigten Failsafe im 2400-AC-Snapshot dokumentiert: fehlt Venus-SOC oder Venus-Power, werden konservativ 2200 W Headroom reserviert; kein letzter Venus-SOC als Live-Steuerwert.
 - neuer Blindspot dokumentiert: `has_value()` prüft Availability, aber keine explizite zeitliche Freshness eines weiterhin numerischen HAME-States.
-- SolarFlow-800-Plus-YAML erneut in der File Library gesucht; keine vollständige aktuelle Automation gefunden. Funktionsbeschreibung bleibt belegt, exakter YAML-Import offen.
+- SolarFlow-800-Plus-YAML mehrfach in der File Library gesucht; keine vollständige aktuelle Automation gefunden. Historisch konkrete Device-Entities und die Funktionsbeschreibung wurden getrennt dokumentiert; exakter Live-YAML-Import bleibt offen.
 - aktuelles konfiguriertes 4-Speicher-SOC-Modell identifiziert: SF800 Plus 1,92 kWh + SF2400 AC 2,88 kWh + Venus D 5,12 kWh + Jupiter C Plus 5,12 kWh = 15,04 kWh Nennkapazität.
 - im Gesamt-SOC-Template definierte nutzbare Energie 12,8512 kWh und Reserve 2,1888 kWh dokumentiert.
 - erkannt: `sensor.verbleibende_energie_bis_mindest_soc` verwendet bei Ausfall letzte gültige SOC-Werte und kennzeichnet dies über Attribute. Als Dashboard-/Analysepfad dokumentiert, nicht automatisch als Live-Control-Sensor.
 - Jupiter-C-Plus-HAME-Pfade inkl. vier PV-Eingänge, Combined Power und SOC inventarisiert.
 - HMJ-2/B2500-D-System-Power-Pfad im Config-Snapshot identifiziert, aber wegen fehlender aktueller Live-Rolle als sekundär/VERIFY klassifiziert.
 - „Bluetti Balco PV“-Shelly-Pfad identifiziert, physische Zuordnung zum heutigen Bluetti-Setup bleibt VERIFY.
-- zentralen zusätzlichen Shelly 3EM Gen3 „Garage Hinten“ vollständig inventarisiert: Phasen-Netto/Bezug/Einspeisung, Gesamtwerte, Connectivity und integrierte kWh.
+- historischen Hoymiles-HiBattery-1920-AC/MS-A2-MQTT-Pfad und historischen OpenDTU-PV-Pfad wiedergefunden und als `HISTORICAL / LIVE VERIFY` dokumentiert, ohne sie dem heutigen aktiven Speicherbestand zuzuschlagen.
+- `sensor.wifi_thermometer` / `Thermometer Grow` als früher konkret vorhandenen Klima-State-Pfad erfasst; damaliger Zustand `unavailable`, heutiger Zustand/Integration offen.
+- zusätzlichen Shelly 3EM Gen3 „Garage Hinten“ vollständig inventarisiert: Phasen-Netto/Bezug/Einspeisung, Gesamtwerte, Connectivity und integrierte kWh.
 - wichtige Semantik dokumentiert: Garage-Hinten `Netto Gesamt` ist saldiert; `Bezug Gesamt`/`Einspeisung Gesamt` sind phasenweise Richtungssummen und nicht identisch mit saldiertem Gesamtimport/-export.
 - Anzucht-, Klimaanlagen-, Outdoor-, Schuko-Lader-, HMS-800W-2T-, Venus-D- und SF2400-Shelly-Pfade inventarisiert.
 - Recorder-Konfiguration aus letztem Snapshot identifiziert: SQLite `/config/home-assistant_v2.db`, 30 Tage Retention, Auto-Purge, Commit-Intervall 30 s.
 - Generic Thermostat „Kühlschrank Cool Stash“ inklusive Ziel 17 °C, Sensor-/Aktorpfad und Zyklusparametern inventarisiert.
+- zwei voneinander abweichende PV-Topologie-Snapshots vom 2026-07-29 und der ausdrücklich bezeichneten „Winterkonfiguration“ vom 2026-07-30 rekonstruiert und **nicht still zusammengeführt**. Abweichungen betreffen u. a. HM1500-Anzahl, Modulzahl/-leistung und SMA-Status; heutige physische Reconciliation als Open Item markiert.
+- für die Winterkonfiguration vom 30.07. dokumentiert, dass Venus D, SolarFlow 2400 AC und SolarFlow 800 Plus damals als rein AC-gekoppelt ohne direkt angeschlossene PV-Module beschrieben wurden.
 - detaillierte Live-Datenlücken in `OPEN_ITEMS.md` neu priorisiert.
 
 ## 2026-09-02 – Projektinitialisierung
@@ -71,6 +75,19 @@ Chronologie tatsächlich bekannter Projekt-Ereignisse. Konfigurationsfunde werde
 - Automation `Zendure SolarFlow 800 Plus AC-Zusatzladung und Nachtentladung` im Projekt iteriert.
 - bekannte Logik: Zusatz-AC-Ladung tagsüber, Nachtentladung, Rest-Einspeisungsziel und Koordination mit Venus-D-Verhalten.
 
+## 2026-07-30 – Winterkonfiguration
+
+- als Winterkonfiguration beschrieben: vordere Garage 2× HM1500 je 3 Module; hintere Garage 2× HM1500 je 4×430 W plus HMS2000 mit 4×500 W; Balkon 2×430 W vertikal/Westen; übrige Module Süd/flach ballastiert.
+- für diesen beschriebenen Winterstand wurde „kein SMA“ angegeben.
+- Venus D, SolarFlow 2400 AC und SolarFlow 800 Plus wurden für diesen Stand als rein AC-gekoppelte Speicher ohne direkte PV-Module beschrieben.
+
+## 2026-07-29 – früheres Topologie-Snapshot
+
+- vordere Garage: 2× HM1500, jeweils 2× JA Solar 440 Wp.
+- hintere Garage: HMS2000 mit 4×440 Wp.
+- Balkon: HMS800 mit 2×440 Wp, Westen.
+- dieser Snapshot und die am Folgetag beschriebene Winterkonfiguration bleiben getrennte historische Zustände/Planstände, bis die physische Entwicklung geklärt ist.
+
 ## 2026-06/07 – SolarFlow 2400 AC Automation
 
 - Home-Assistant-Steuerung für Tages-/Nachtbetrieb und Überschussmanagement iteriert.
@@ -78,7 +95,7 @@ Chronologie tatsächlich bekannter Projekt-Ereignisse. Konfigurationsfunde werde
 
 ## Historischer Bestand
 
-- PV-Anlage mit 29 Modulen und ungefähr 8–8,5 kWp im Betrieb.
-- Hoymiles HM-1500-4T, HMS-800W-2T, HMS-2000-4T und SMA-Stringwechselrichter im Projektkontext.
+- PV-Anlage mit 29 Modulen und ungefähr 8–8,5 kWp im Projektbestand geführt.
+- Hoymiles HM-1500-Familie, HMS-800W-2T, HMS-2000-4T und ein später geführter SMA-Stringwechselrichter ca. 4,5 kW im Projektkontext; physische Zeitachse des SMA muss mit dem Winter-Snapshot reconciliert werden.
 - Shelly Pro 3EM als zentraler Messpfad.
-- mehrere Speicher-/Energiesysteme im Projektkontext, darunter Zendure, Marstek, Jackery und Bluetti.
+- mehrere Speicher-/Energiesysteme im Projektkontext, darunter Zendure, Marstek, Jackery, Bluetti und historisch Hoymiles HiBattery.
