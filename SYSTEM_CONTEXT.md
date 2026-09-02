@@ -62,21 +62,58 @@ Dieser Stand ist `DOCUMENTED / CONFIG SNAPSHOT`, nicht heute live aus HA gelesen
 
 Backup-/Restore-Konzept: `UNKNOWN`.
 
-## 4. PV-Bestand
+## 4. PV-Bestand und Topologie
 
-Bekannter Gesamtbestand:
+### 4.1 Projektweiter Bestandsrahmen
+
+Im aktuellen Projektkontext als Bestand geführt:
 
 - 29 PV-Module.
 - insgesamt ungefähr 8–8,5 kWp.
-
-Bekannte Wechselrichter:
-
-- Hoymiles HM-1500-4T.
+- Hoymiles HM-1500-Familie.
 - Hoymiles HMS-800W-2T.
 - Hoymiles HMS-2000-4T.
 - SMA-Stringwechselrichter, ca. 4,5 kW.
 
-Für den HMS-800W-2T existiert ein eigener Shelly-PV-Messpfad in HA. Exakte Modulzuordnung zu Wechselrichtern/Strings und Ausrichtungen: `UNKNOWN / INVENTORY GAP`.
+Für den HMS-800W-2T existiert ein eigener Shelly-PV-Messpfad in HA.
+
+### 4.2 Datiertes Topologie-Snapshot 2026-07-29
+
+Vom Nutzer damals konkret als physische Topologie beschrieben:
+
+- **vordere Garage:** 2× Hoymiles HM1500; je Wechselrichter 2× JA-Solar-Module mit 440 Wp.
+- **hintere Garage:** 1× Hoymiles HMS2000; 4× 440-Wp-Module.
+- **Balkon:** 1× Hoymiles HMS800; 2× 440-Wp-Module; Ausrichtung Westen.
+
+Status: `REPORTED 2026-07-29 / HISTORICAL TOPOLOGY SNAPSHOT / LIVE VERIFY`.
+
+### 4.3 Datiertes „Winterkonfiguration“-Snapshot 2026-07-30
+
+Am Folgetag wurde ausdrücklich eine **Winterkonfiguration** beschrieben:
+
+- **vordere Garage:** 2× Hoymiles HM1500; je 3 Module.
+- **hintere Garage:** 2× Hoymiles HM1500; je 4×430 W, zusätzlich 1× Hoymiles HMS2000 mit 4×500 W.
+- **Balkon:** 2×430 W, vertikal/90°, Westausrichtung; im Winter als vernachlässigbar beschrieben.
+- **übrige Module:** südausgerichtet, flache ballastierte Aufständerung.
+- für diese Winterkonfiguration wurde ausdrücklich **kein SMA-Stringwechselrichter** genannt bzw. „kein SMA“ angegeben.
+
+Status: `REPORTED 2026-07-30 / WINTER CONFIGURATION / NOT AUTOMATICALLY CURRENT LIVE TOPOLOGY`.
+
+### 4.4 Konflikt-/Zeitlogik
+
+Die Angaben vom 29.07. und 30.07. unterscheiden sich erheblich bei Modulzahl, Modulleistung und Zahl der HM1500. Zusätzlich steht die Winterkonfiguration mit „kein SMA“ im Konflikt zum später im Projektbestand geführten SMA-Stringwechselrichter.
+
+Daher gilt **kein stilles Zusammenführen**. Möglich sind u. a. Plan-/Umbauzustand, saisonale Rekonfiguration oder spätere Erweiterung; die Ursache wird nicht erfunden.
+
+Kanonischer heutiger physischer Stand: `LIVE INVENTORY REQUIRED`.
+
+Vor endgültiger Zuordnung sind zu erfassen:
+
+- Anzahl der heute tatsächlich montierten Wechselrichter je Modell.
+- Modulzahl und Wp je WR/MPPT/String.
+- Standort/Ausrichtung je Modulgruppe.
+- aktueller SMA-Status und dessen Strings.
+- welche Teile des 30.07.-Snapshots Plan/Winterziel und welche tatsächlich umgesetzt sind.
 
 ## 5. Netz- und Unterverteilungsmessung
 
@@ -124,6 +161,16 @@ Gesamt:
 
 Dieses Modell ist die aktuelle **Konfigurationsstruktur**, keine Aussage über heutigen SOC oder Online-Status.
 
+### Historische AC-Kopplungsangabe 2026-07-30
+
+Für die damalige Winterkonfiguration wurden folgende drei Speicher ausdrücklich als **rein AC-gekoppelt und ohne direkt angeschlossene PV-Module** beschrieben:
+
+- Marstek Venus D, damals ca. 5 kWh / zwei Einheiten beschrieben.
+- Zendure SolarFlow 2400 AC mit einer Batterie, ca. 2,8 kWh.
+- Zendure SolarFlow 800 Plus mit einer Batterie, ca. 1,9 kWh.
+
+Das ist ein `HISTORICAL/WINTER CONFIG SNAPSHOT`; heutige PV-Direktanbindung jedes Speichers ist separat zu verifizieren.
+
 ## 7. Weitere Speicher-/Energiesysteme
 
 Im Projektbestand bekannt:
@@ -137,7 +184,12 @@ Zusätzlich im letzten HA-Config-Snapshot vorhanden:
 - Marstek B2500-D / HAME `HMJ-2` System-Power-Template.
 - Messpfad mit Template-Namen `Bluetti Balco PV`.
 
-Diese beiden konfigurierten Pfade werden **nicht** automatisch als aktive Mitglieder der aktuellen Speicherregelung behandelt, weil sie nicht im 4-Speicher-Gesamt-SOC enthalten sind und kein heutiger Live-State vorliegt.
+Historisch zusätzlich konkret eingebunden:
+
+- Hoymiles HiBattery 1920 AC / MS-A2 über HA/MQTT.
+- OpenDTU als Hoymiles-PV-Telemetriepfad.
+
+Diese historischen/sekundären Pfade werden **nicht** automatisch als aktive Mitglieder der aktuellen Speicherregelung behandelt.
 
 ## 8. Zendure-Regelarchitektur
 
@@ -212,6 +264,10 @@ Zusätzlich konfiguriert:
 - Aktor: Shelly Plug S Gen 3.
 - Temperatursensor `cool_stash_temperature`.
 - Ziel 17 °C.
+
+Zusätzlich aus einem früheren HA-State-Snapshot bekannt:
+
+- `sensor.wifi_thermometer` / `Thermometer Grow`, damals `unavailable`; physisches Modell/Integration noch `UNKNOWN`.
 
 ## 12. Security-/Privacy-Rahmen
 
