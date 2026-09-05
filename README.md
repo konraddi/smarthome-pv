@@ -26,10 +26,18 @@ GitHub-Repository: `konraddi/smarthome-pv`
 
 ChatGPT-Projektquellen sollen nicht als parallele Projektakte gepflegt werden. Die wirksame Kurz-Anweisung steht zusätzlich im ChatGPT-Feld **Projektanweisungen**; ihre versionierte Kopie liegt in `PROJECT_INSTRUCTIONS.md`.
 
+## Agent-Version
+
+Aktiver Stand und Rollback-Punkt stehen in `VERSION.md`. Agent-/Methodikänderungen werden in `CHANGELOG.md` versioniert; das Verfahren definiert `RUNBOOKS/AGENT_VERSIONING.md`.
+
+Normale Änderungen am Anlagen-Ist-Zustand, an Geräte-/Entity-Registern, Messwerten oder Betriebsereignissen sind keine neue Agent-Version, solange Methodik, Schema oder verbindlicher Workflow unverändert bleiben.
+
 ## Wichtige Dateien
 
 - `PROJECT_INSTRUCTIONS.md` – Governance und Orchestrierung
 - `AGENTS.md` – vollständige Arbeitsmethodik
+- `VERSION.md` – aktive Agent-Version und Rollback-Punkt
+- `CHANGELOG.md` – Historie der Agent-/Methodikänderungen
 - `SYSTEM_CONTEXT.md` – stabile Anlagen-/Systemarchitektur
 - `CURRENT_SYSTEM_STATUS.md` – aktueller technischer Ist-Zustand
 - `DEVICE_REGISTER.md` – physische Geräte
